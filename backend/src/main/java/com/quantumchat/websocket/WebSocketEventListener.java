@@ -1,0 +1,56 @@
+package com.quantumchat.websocket;
+
+import com.quantumchat.security.UserPrincipal;
+import com.quantumchat.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.event.EventListener;
+import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Component;
+import org.springframework.web.socket.messaging.SessionConnectedEvent;
+import org.springframework.web.socket.messaging.SessionDisconnectEvent;
+
+import java.util.Map;
+
+@Component
+@RequiredArgsConstructor
+public class WebSocketEventListener {
+
+    private static final Logger log = LoggerFactory.getLogger(WebSocketEventListener.class);
+
+    private final UserService userService;
+    private final SimpMessageSendingOperations messagingTemplate;
+
+    @EventListener
+    public void handleWebSocketConnectListener(SessionConnectedEvent event) {
+        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+        Authentication auth = (Authentication) headerAccessor.getUser();
+        if (auth != null && auth.getPrincipal() instanceof UserPrincipal principal) {
+            log.info("User connected to WebSocket: {}", principal.getEmail());
+            userService.updateLastSeen(principal.getId());
+
+            messagingTemplate.convertAndSend("/topic/presence", Map.of(
+                    "userId", principal.getId().toString(),
+                    "status", "ONLINE"
+            ));
+        }
+    }
+
+    @EventListener
+    public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
+        StompHeaderAccessor headerAccessor = StompHeaderAccessor.wrap(event.getMessage());
+        Authentication auth = (Authentication) headerAccessor.getUser();
+        if (auth != null && auth.getPrincipal() instanceof UserPrincipal principal) {
+            log.info("User disconnected from WebSocket: {}", principal.getEmail());
+            userService.updateLastSeen(principal.getId());
+
+            messagingTemplate.convertAndSend("/topic/presence", Map.of(
+                    "userId", principal.getId().toString(),
+                    "status", "OFFLINE"
+            ));
+        }
+    }
+}

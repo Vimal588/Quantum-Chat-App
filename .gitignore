@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Production build outputs
+dist/
+frontend/dist/
+backend/target/
+build/
+
+# IDE & Editor files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+
+# Logs & temporary files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment & credentials (keep template files like .env.example and .env.docker)
+.env
+.env.local
+.env.*.local
+!*.example
+!*.docker
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini
