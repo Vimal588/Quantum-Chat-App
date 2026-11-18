@@ -64,6 +64,6 @@ services:
 databases:
   - name: quantum-chat-db
     databaseName: quantum_chat_db
-    user: postgres
+    user: quantum_user
     plan: free
     region: oregon
